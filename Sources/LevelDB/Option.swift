@@ -54,7 +54,7 @@ public class Option {
 //        cache.map { leveldb_options_set_cache(pointer, $0.pointer) }
         leveldb_options_set_block_size(pointer, self.blockSize)
         leveldb_options_set_block_restart_interval(pointer, self.blockRestartInterval)
-        leveldb_options_set_compression(pointer, Int32(1))
+        leveldb_options_set_compression(pointer, Int32(0))
 //        leveldb_options_set_max_file_size(pointer, self.maxFileSize)
     }
 
