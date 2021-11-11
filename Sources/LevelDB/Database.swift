@@ -41,40 +41,49 @@ public class Database {
 public extension Database {
     func put<Value: DataEncodable>(key: String, value: Value) throws {
         let valueData = try value.toData()
-        try valueData.toData().withUnsafeBytes { (rawBufferPointer: UnsafeRawBufferPointer) -> Void in
-            let unsafeBufferPointer = rawBufferPointer.bindMemory(to: Int8.self)
-            guard let unsafePointer = unsafeBufferPointer.baseAddress else {
-                throw LevelDBError.put(message: nil)
-            }
+        var errorPointer: UnsafeMutablePointer<Int8>?
 
-            var errorPointer: UnsafeMutablePointer<Int8>?
-            leveldb_put(pointer, writeOption.pointer, key, key.utf8.count, unsafePointer, valueData.count, &errorPointer)
-            if let error = errorPointer {
-                let message = String(cString: error)
-                defer { leveldb_free(error) }
-                throw LevelDBError.put(message: message)
-            }
+        key.slice { keyBytes, keyCount in
+            valueData.withUnsafeBytes({ rawBufferPointer in
+                leveldb_put(pointer, writeOption.pointer, keyBytes, keyCount, rawBufferPointer.baseAddress!.assumingMemoryBound(to: Int8.self), valueData.count, &errorPointer)
+            })
         }
     }
 
     func get<Value: DataDecodable>(key: String) throws -> Value? {
-        var valueLength: Int = 0
-        var errorPointer: UnsafeMutablePointer<Int8>?
-        guard let dataPointer = leveldb_get(pointer, readOption.pointer, key, key.utf8.count, &valueLength, &errorPointer) else {
-            if let error = errorPointer {
-                let message = String(cString: error)
-                defer { leveldb_free(error) }
-                throw LevelDBError.get(message: message)
-            }
+        var valueLength = 0
+        var error: UnsafeMutablePointer<Int8>?
+        var value: UnsafeMutablePointer<Int8>?
+
+        key.slice { bytes, len in
+            value = leveldb_get(pointer, readOption.pointer, bytes, len, &valueLength, &error)
+        }
+        
+        // check fetch value lenght
+        guard valueLength > 0 else {
             return nil
         }
-        defer {
-            dataPointer.deallocate()
-        }
-        let data = Data(bytes: dataPointer, count: valueLength)
-        return try Value(data: data)
+        let target = Data(bytes: value!, count: valueLength)
+        free(value)
+        
+        return try .init(data: target)
     }
 
+    /// Get the collection of keys corresponding to all data in the database
+    func keys() -> [Slice] {
+        let iterator = leveldb_create_iterator(pointer, readOption.pointer)
+        leveldb_iter_seek_to_first(iterator)
+        var keys = [Slice]()
+        while leveldb_iter_valid(iterator) == 1 {
+            var len = 0
+            let result: UnsafePointer<Int8> = leveldb_iter_key(iterator, &len)
+            let data = Data(bytes: result, count: len)
+            keys.append(data)
+            leveldb_iter_next(iterator)
+        }
+        return keys
+    }
+    
     func delete(key: String) throws {
         var errorPointer: UnsafeMutablePointer<Int8>?
         leveldb_delete(pointer, writeOption.pointer, key, key.utf8.count, &errorPointer)
