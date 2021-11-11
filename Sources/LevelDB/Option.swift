@@ -51,10 +51,11 @@ public class Option {
         leveldb_options_set_paranoid_checks(pointer, self.paranoidChecks.uint8)
         leveldb_options_set_write_buffer_size(pointer, self.writeBufferSize)
         leveldb_options_set_max_open_files(pointer, self.maxOpenFiles)
-        cache.map { leveldb_options_set_cache(pointer, $0.pointer) }
+//        cache.map { leveldb_options_set_cache(pointer, $0.pointer) }
         leveldb_options_set_block_size(pointer, self.blockSize)
         leveldb_options_set_block_restart_interval(pointer, self.blockRestartInterval)
-        leveldb_options_set_max_file_size(pointer, self.maxFileSize)
+        leveldb_options_set_compression(pointer, Int32(1))
+//        leveldb_options_set_max_file_size(pointer, self.maxFileSize)
     }
 
     deinit {
