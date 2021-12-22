@@ -1,4 +1,4 @@
-// swift-tools-version:5.4
+// swift-tools-version:5.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -56,7 +56,7 @@ let package = Package(
         ], publicHeadersPath: "header", cSettings: [
             .define("LEVELDB_IS_BIG_ENDIAN", to: "0"),
             .define("LEVELDB_PLATFORM_POSIX", to: "1"),
-            .define("HAVE_FULLFSYNC", to: "1", .when(platforms: [.iOS, .macOS, .macCatalyst])),
+            .define("HAVE_FULLFSYNC", to: "1", .when(platforms: [.iOS, .macOS])),
             .headerSearchPath("./"),
             .headerSearchPath("include/"),
         ]),

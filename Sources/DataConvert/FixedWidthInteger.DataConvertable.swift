@@ -15,7 +15,6 @@ public extension FixedWidthInteger where Self: DataConvertible {
     }
 
     func toData() throws -> Data {
-        let littleEndian = littleEndian
         return withUnsafePointer(to: littleEndian) { pointer -> Data in
             Data(buffer: UnsafeBufferPointer(start: pointer, count: 1))
         }
