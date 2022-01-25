@@ -140,7 +140,7 @@ public extension Database {
                 let keyData = Data(bytes: keyPointer, count: keyLength)
                 let value = Data(bytes: valuePointer, count: valueLength)
                 if let key = String(data: keyData, encoding: .utf8) {
-                    var stop: Bool = false
+                    var stop = false
                     action(key, value, &stop)
 
                     if stop { break }
