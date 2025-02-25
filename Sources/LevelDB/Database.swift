@@ -4,6 +4,7 @@
 
 @_implementationOnly import CLevelDB
 import struct Foundation.Data
+import Darwin
 
 public class Database {
     let path: String
